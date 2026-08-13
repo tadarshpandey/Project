@@ -78,25 +78,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
 # Database Configuration
-# Default to PostgreSQL if configured via DATABASE_URL or individual DB_* env variables;
-# Gracefully fall back to SQLite3 for instant local development without manual db provisioning.
+# Automatically parses DATABASE_URL from Render (supports both postgres:// and postgresql://)
+# If no DATABASE_URL or remote host is specified, it gracefully defaults to local SQLite3.
 database_url = os.getenv('DATABASE_URL')
-if database_url and database_url.startswith('postgresql://'):
+if database_url and database_url.strip():
     DATABASES = {
-        'default': dj_database_url.config(
-            default=database_url,
+        'default': dj_database_url.parse(
+            database_url.strip(),
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
-elif os.getenv('DB_NAME') and os.getenv('DB_USER'):
+elif os.getenv('DB_HOST') and os.getenv('DB_NAME') and os.getenv('DB_USER'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'wastetrack_db'),
             'USER': os.getenv('DB_USER', 'postgres'),
             'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
-            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'HOST': os.getenv('DB_HOST'),
             'PORT': os.getenv('DB_PORT', '5432'),
         }
     }
