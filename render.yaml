@@ -1,0 +1,34 @@
+# Render Blueprint Specification for WasteTrack
+
+services:
+  # Django REST Framework Backend Service
+  - type: web
+    name: wastetrack-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    plan: free
+    healthCheckPath: /api/reports/stats/
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "True"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: wastetrack-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.13.1
+
+# Managed PostgreSQL Database
+databases:
+  - name: wastetrack-db
+    databaseName: wastetrack_db
+    user: wastetrack_user
+    plan: free
